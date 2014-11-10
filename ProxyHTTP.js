@@ -245,6 +245,7 @@ var proxyWork = function(context, callback){
     });
     res.on('end', function(){
       context.res.end();
+      res.socket.destroy();
       isFunction(callback) && callback();
     });
   });
