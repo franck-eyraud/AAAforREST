@@ -43,7 +43,7 @@ var log = function (context, err, code){
     }
   }
   rule='['+rule+']';
-    if (err == "HTTP" && context.login)var data = "" + context.date + "\t" + remoteIP + "\t" + context.login + "\t" + context.req.method + "\t" + context.req.url + "\t" + code +"\t"+rule;
+    if (err == "HTTP" && context.login)var data = "" + context.date + "\t" + remoteIP + "\t" + context.login + "\t" + context.req.method + "\t" + context.req.headers.host +context.req.url + "\t" + code +"\t"+rule;
 
     else if (context.restricted) var data = "" + context.date + "\t" + remoteIP + "\t" + err;
     else if (err == "HTTP")var data = "" + context.date + "\t" + remoteIP + "\t" + context.req.method + "\t" + context.req.headers.host + context.req.url + "\t" + code +"\t"+rule;
