@@ -131,11 +131,13 @@ var loginLDAP = function (context, callback) {
 	console.log("authentified!");
 	context.login=login;
 	serveursLDAP.unbind(function () {
+	  serveursLDAP.socket.destroy();
 	  callback(err);
 	});
       } else {
 	console.log("LDAP error : " + JSON.stringify(err));
 	callback(err);
+	serveursLDAP.socket.destroy();
       }
     });
   }else{
