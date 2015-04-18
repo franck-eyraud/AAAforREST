@@ -47,7 +47,7 @@ var log = function (context, err, code){
 
     else if (context.restricted) var data = "" + context.date + "\t" + remoteIP + "\t" + err;
     else if (err == "HTTP")var data = "" + context.date + "\t" + remoteIP + "\t" + context.req.method + "\t" + context.req.headers.host + context.req.url + "\t" + code +"\t"+rule;
-  
+
   if (data){
     console.log(data);
     if (logFile) fs.appendFileSync(logFile, data+"\n");
@@ -58,7 +58,7 @@ var log = function (context, err, code){
 // Test function for basic http authentication with a fixed login/password defined in config.json
 
 var authentifyDummy =function (context, callback){
-  
+
   context.restricted = true;
 
   if(!context.req.headers.authorization){
@@ -146,7 +146,7 @@ var loginLDAP = function (context, callback) {
   }
 
   function setLogin(context) {
-    
+
   }
 }
 
@@ -240,7 +240,19 @@ var proxyWork = function(context, callback){
       headers=couchDBHeaders(headers);
     }
 
-    context.res.writeHead(res.statusCode, headers);
+    for (var header in headers) {
+      var toSet=headers[header];
+      var alreadyHere;
+      if (alreadyHere=context.res.getHeader(header)) {
+        if (typeof alreadyHere=="string") {
+          alreadyHere=[alreadyHere]
+        }
+        toSet=alreadyHere.concat(toSet);
+      }
+      context.res.setHeader(header,toSet);
+    }
+
+    context.res.writeHead(res.statusCode);
     log(context, "HTTP", res.statusCode);
     res.on('data',function(chunkOrigin) {
         context.res.write(chunkOrigin);
@@ -287,7 +299,7 @@ var proxyWork = function(context, callback){
 
 // Function that allow to find the index of the requested server inside config.json
 
-var matching = function(host){ 
+var matching = function(host){
   var verif = false;
   var i =0;
   while ((verif == false) && (i < conf.length)){
@@ -344,14 +356,14 @@ http.createServer(function (request, response){
     sendResponse(context,404,"Not Found");
   }else{
   	context.conf = index;
-    
-    var head = JSON.parse(JSON.stringify(request.headers)); 
+
+    var head = JSON.parse(JSON.stringify(request.headers));
     if (request.headers.authorization && conf[index].hideAuth) delete head.authorization;
     if (!conf[index].preserveHost) delete head.host;
-    
+
     var options = {
       'host': conf[index].host,
-      'port': conf[index].port, 
+      'port': conf[index].port,
       'path': conf[index].path + url.parse(request.url).path,
       'method': request.method,
       'headers': head,
@@ -398,5 +410,5 @@ http.createServer(function (request, response){
     }
   }
   });
-}).listen(port); // port has to be changed directly inside the code. 
+}).listen(port); // port has to be changed directly inside the code.
 console.log('Server running port '+port);
