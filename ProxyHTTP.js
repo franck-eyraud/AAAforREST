@@ -131,13 +131,13 @@ var loginLDAP = function (context, callback) {
 	console.log("authentified!");
 	context.login=login;
 	serveursLDAP.unbind(function () {
-	  serveursLDAP.socket.destroy();
+	  serveursLDAP.socket.end();
 	  callback(err);
 	});
       } else {
 	console.log("LDAP error : " + JSON.stringify(err));
 	callback(err);
-	serveursLDAP.socket.destroy();
+	serveursLDAP.socket.end();
       }
     });
   }else{
@@ -247,7 +247,7 @@ var proxyWork = function(context, callback){
     });
     res.on('end', function(){
       context.res.end();
-      res.socket.destroy();
+      res.socket.end();
       isFunction(callback) && callback();
     });
   });
@@ -275,6 +275,14 @@ var proxyWork = function(context, callback){
     if (context.options.body) proxyReq.write(context.options.body);
     proxyReq.end();
   }
+  context.res.on("close",function() {
+    proxyReq.abort();
+    proxyReq.socket.end();
+    console.log("forcely closed connection");
+    context.date=new Date();
+    log(context, "HTTP", 499);
+    isFunction(callback) && callback();
+  });
 }
 
 // Function that allow to find the index of the requested server inside config.json
