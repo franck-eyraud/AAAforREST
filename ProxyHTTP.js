@@ -106,6 +106,9 @@ var loginLDAP = function (context, callback) {
     if (domain)
       login=context.login+"@"+domain;
   }
+
+  checkAuth();
+  function checkAuth(){
   if (!servLDAP[url] || !servLDAP[url][id]){
     console.log("logging in "+ldapReq+" into "+url);
 
@@ -141,13 +144,15 @@ var loginLDAP = function (context, callback) {
       }
     });
   }else{
+    if (servLDAP[url][id].hasOwnProperty("err")) {
     if (!servLDAP[url][id].err) context.login=login;
     callback(servLDAP[url][id].err);
+    } else {
+      setTimeout(checkAuth,100);
+    }
+  }
   }
 
-  function setLogin(context) {
-
-  }
 }
 
 var authentifyLDAP =function (context, callback, callbackOnError){
