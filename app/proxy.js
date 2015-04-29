@@ -273,7 +273,7 @@ http.createServer(function(requestIn, responseOut) {
       headers: preserveHeadersCase(requestIn.headers),
       agent: false
     };
-    if (!site.preserveCredentials) delete context.options.headers.Authorization;
+    if (site.authentication && site.authentication.length && !site.preserveCredentials) delete context.options.headers.Authorization;
     parseHttpCredentials(context);
     var i = 0;
     var found = false;
