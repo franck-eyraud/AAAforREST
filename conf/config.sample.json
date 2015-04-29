@@ -23,7 +23,6 @@
   },{
     "hostProxy": "couchdb.local",
     "port": 5984,
-    "preserveCredentials": true,
     "rules":[]
   }]
 }
