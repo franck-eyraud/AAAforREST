@@ -1,6 +1,125 @@
 var crypto=require('crypto');
 var Cookies=require('cookies');
 
+function readBody(context,callback) {
+  if (context.requestIn.readable) {
+    var body="";
+    context.requestIn.on('data',function(chunk) {
+      body+=chunk;
+    });
+    context.requestIn.on('end',function() {
+      context.options.body=body;
+      callback(body);
+    });
+  } else {
+    callback(context.options.body);
+  }
+}
+
+function parseBody(context,sessionHandler) {
+  var post=require("querystring").parse(context.options.body);
+  var userfield=sessionHandler.userfield || "name";
+  var passfield=sessionHandler.passfield || "password";
+  context.login=post[userfield] || "";
+  context.pw=post[passfield] || "";
+};
+
+function handleSessionRequest(sessionHandler) {
+  var $=this;
+  var context=this.context;
+  switch (this.method) {
+    case "POST":
+      readBody(this.context,function(body) {
+        parseBody($.context,sessionHandler);
+        ignoreCookie($.context,sessionHandler);
+        $.authenticate($.context,function(authenticator) {
+          if (authenticator) {
+            setAuthCookie($.context,sessionHandler);
+            if (sessionHandler.forward) {
+              delete context.options.body;
+              $.context.options.method="GET";
+              $.proxyWork($.context);
+            } else {
+              $.sendResponse($.context, 200, JSON.stringify({ok: true}));
+            }
+          } else {
+            setAuthCookie($.context,sessionHandler);
+            if(sessionHandler.forward) {
+              if (!sessionHandler.preserveCredentials)
+                delete context.options.body;
+              $.proxyWork($.context);
+            } else {
+              $.sendResponse($.context, 401, JSON.stringify({error: "unauthorized"}));
+            }
+          }
+        },true);
+      });
+      break;
+    case "DELETE":
+      delete $.context.login;
+      setAuthCookie($.context,sessionHandler);
+      if (sessionHandler.forward) {
+        $.proxyWork($.context);
+      } else {
+        $.sendResponse($.context, 200, 'Logged out');
+      }
+      break;
+    case "GET":
+      $.authenticateIfPresent($.context,function(authenticator) {
+        if (sessionHandler.forward) {
+          $.proxyWork($.context);
+        } else {
+          var session={
+            name:$.context.login || null,
+            authenticator:authenticator
+          }
+          $.sendResponse($.context, 200, JSON.stringify(session));
+        }
+      });
+      break;
+    default:
+      if (sessionHandler.forward) {
+        $.authenticateIfPresent($.context,function() {
+          proxyWork($.context);
+        });
+      } else {
+        $.sendResponse($.context, 405, 'Method not allowed');
+      }
+  }
+}
+
+function addSessionRule(site) {
+  if (site.sessionHandler) {
+    if (!site.sessionHandler.hasOwnProperty("preserveCredentials")) {
+      site.sessionHandler.preserveCredentials=site.preserveCredentials;
+    }
+    if (!site.sessionHandler.hasOwnProperty("forward")) {
+      site.sessionHandler.forward=site.sessionHandler.preserveCredentials;
+    }
+    var rule={};
+    rule.control=function() {
+      var active=true;
+      if (!site.sessionHandler.path) {
+        console.log("session handler with no Path defined");
+        return false;
+      } else if (!/^\//.test(site.sessionHandler.path)) {
+        site.sessionHandler.path = "/" +site.sessionHandler.path;
+      }
+      return new RegExp("^"+site.sessionHandler.path).test(this.path);
+    };
+    rule.action=function() {
+      handleSessionRequest.call(this,site.sessionHandler);
+    };
+    site.rules.unshift(rule);
+
+    var authenticator={
+      cookieName:site.sessionHandler.cookieName||null,
+    };
+    site.authentication=site.authentication || [];
+    site.authentication.unshift(authenticator);
+  }
+}
+
 var saved_cookies={};
 const default_cookie_auth_name='AAAforRest-auth';
 var defaultExpiryTime=600000;
@@ -84,7 +203,6 @@ function setAuthCookie(context,authenticator) {
 
 module.exports={
   check: checkAuthCookie,
-  set: setAuthCookie,
-  ignore: ignoreCookie
+  manageSession:addSessionRule
 }
 

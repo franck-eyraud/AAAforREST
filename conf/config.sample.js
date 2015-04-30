@@ -71,6 +71,11 @@ module.exports = {
       {url: "ldap://ldap.acme.com", id: "uid", dn: "ou=People,dc=acme,dc=com"},
 
       /**
+       * HTTP service with basic authentication.
+       */
+      {url: "http://auth.acme.com:5984/"},
+
+      /**
        * Fixed credentials.
        */
       {login: "roadrunner", password: "bipbip"}

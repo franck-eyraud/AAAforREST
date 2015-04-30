@@ -1,21 +1,53 @@
 {
+  "port": 1337,
   "sites": [{
-    "hostProxy": "shop.acme.com",
+    "hostProxy": "cassandre.local",
+    "port": 5984,
+    "path": "/cassandre/_design/cassandre/_rewrite",
+    "hideLocationParts": 1,
     "authentication": [
-      {"url": "ldap://ldap.acme.org", "id": "cn", "dn": "dc=acme,dc=org"},
-      {"url": "ldap://ldap.acme.com", "id": "uid", "dn": "ou=People,dc=acme,dc=com"},
-      {"login": "roadrunner", "password": "bipbip"}
+      {"login": "alice", "password": "whiterabbit"},
+      {"login": "mrwhite", "password": "alice"},
+      {"url": "http://localhost:5984/"}
     ],
     "restricted": {
-      "rocket": ["will.coyote"],
-      "magnet": ["will.coyote"],
-      "false hole": ["will.coyote"],
-      "rifle": ["elmer.fudd"],
-      "ammo": ["elmer.fudd"]
+      "iamlate": ["mrwhite"]
+    },
+    "sessionHandler": {
+      "path": "/_session"
     },
     "rules": [{
-      "control": "method != 'GET'",
+      "control": "method != 'GET' || /Wonderland/.test(path)",
       "action": "authenticate(context,function(){authorize(context,function(){proxyWork(context)})})"
     }]
+  },{
+    "hostProxy": "^couchdb.local",
+    "port": 5984,
+    "preserveCredentials": true,
+    "rules":[]
+  },{
+    "hostProxy": "^xcouchdb.local",
+    "port": 5984,
+    "sessionHandler": {
+      "path": "/_session"
+    },
+    "authentication": [
+      {"login": "alice", "password": "whiterabbit"}
+    ],
+    "rules":[]
+  },{
+    "hostProxy": "^xxcouchdb.local",
+    "port": 5984,
+    "sessionHandler": {
+      "path": "/_session",
+      "preserveCredentials": true
+    },
+    "authentication": [
+      {"login": "alice", "password": "whiterabbit"}
+    ],
+    "proxyAuth": {
+      "headerName": "X-Auth-CouchDB-UserName"
+    },
+    "rules":[]
   }]
 }
