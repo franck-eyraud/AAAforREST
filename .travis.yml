@@ -1,22 +1,28 @@
 services: couchdb
 language: node_js
-node_js: "0.12"
+node_js: 
+  - "0.12"
+  - "0.11"
+  - "0.10"
 addons:
   hosts:
     - cassandre.local
     - couchdb.local
-    - xcouchdb.local
-    - xxcouchdb.local
+    - sessiontt.local
+    - sessiontf.local
+    - sessionft.local
+    - sessionff.local
 install:
 - npm install
 - npm install -g jasmine-node
 - npm install frisby
 - cp conf/config.sample.json conf/config.json
-- node app/proxy.js >/dev/null &
+- node app/proxy.js &
 # Install CouchApp
 - sudo pip install couchapp
 # Install Cassandre
 - curl -X PUT -d '"false"' localhost:5984/_config/httpd/secure_rewrites
+- curl -X PUT -d '"{couch_httpd_auth, proxy_authentication_handler}, {couch_httpd_auth, cookie_authentication_handler}, {couch_httpd_auth, default_authentication_handler}"' localhost:5984/_config/httpd/authentication_handlers
 - curl -X PUT localhost:5984/cassandre
 - wget https://github.com/Hypertopic/Cassandre/archive/master.zip
 - unzip master.zip

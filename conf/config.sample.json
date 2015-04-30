@@ -26,7 +26,7 @@
     "preserveCredentials": true,
     "rules":[]
   },{
-    "hostProxy": "^xcouchdb.local",
+    "hostProxy": "^sessionff.local",
     "port": 5984,
     "sessionHandler": {
       "path": "/_session"
@@ -36,11 +36,41 @@
     ],
     "rules":[]
   },{
-    "hostProxy": "^xxcouchdb.local",
+    "hostProxy": "^sessiontt.local",
     "port": 5984,
     "sessionHandler": {
       "path": "/_session",
       "preserveCredentials": true
+    },
+    "authentication": [
+      {"login": "alice", "password": "whiterabbit"}
+    ],
+    "proxyAuth": {
+      "headerName": "X-Auth-CouchDB-UserName"
+    },
+    "rules":[]
+  },{
+    "hostProxy": "^sessiontf.local",
+    "port": 5984,
+    "sessionHandler": {
+      "path": "/_session",
+      "preserveCredentials": false,
+      "forward":true
+    },
+    "authentication": [
+      {"login": "alice", "password": "whiterabbit"}
+    ],
+    "proxyAuth": {
+      "headerName": "X-Auth-CouchDB-UserName"
+    },
+    "rules":[]
+  },{
+    "hostProxy": "^sessionft.local",
+    "port": 5984,
+    "sessionHandler": {
+      "path": "/_session",
+      "forward":false,
+      "preserveCredentials":true
     },
     "authentication": [
       {"login": "alice", "password": "whiterabbit"}
