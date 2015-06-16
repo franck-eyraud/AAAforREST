@@ -75,9 +75,6 @@ function authenticate(context, callback, shouldNotCatch) {
       }
     }, function(authenticator) {
       if (request.auth && request.auth.success) {
-        if (!authenticator.preserveCredentials) {
-          delete context.options.headers.Authorization;
-        }
         if (site.forwardedLoginHeader) {
           context.options.headers[site.forwardedLoginHeader] = request.auth.login;
         }
@@ -420,8 +417,7 @@ app.use(vhost('auth.*', userApp));
 app.use(function(requestIn, responseOut, next) {
   var context = {
     requestIn: requestIn,
-    responseOut: responseOut,
-    date: new Date()
+    responseOut: responseOut
   };
   var domain=require("domain").create();
   domain.on("uncaughtException",function(err) {
