@@ -40,7 +40,7 @@ test.create('LDAP authentication failed on password: no fallback')
   .auth('riemann', 'secret')
   .expectStatus(401)
   .toss();
-test.create('LDAP authentication failed on password: no fallback')
+test.create('LDAP authentication failed on login: fallback')
   .get('http://auth_ldap.local:1337/')
   .auth('mrwhite', 'alice')
   .expectStatus(200)
