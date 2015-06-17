@@ -2,9 +2,7 @@ services: couchdb
 language:
 - node_js
 - ruby
-node_js:
-- "0.12"
-- "0.10"
+node_js: "0.10"
 addons:
   hosts:
     - auth.local
@@ -16,6 +14,7 @@ addons:
     - auth_fixed.local
     - auth_ldap.local
     - auth_http.local
+    - auth_multi.local
 install:
 - npm install
 - npm install -g jasmine-node

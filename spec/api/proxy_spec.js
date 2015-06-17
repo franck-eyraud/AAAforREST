@@ -55,3 +55,8 @@ test.create('Can\'t forge proxy auth')
   .addHeader('x-auth-couchdb-roles','_admin')
   .expectStatus(401)
   .toss();
+test.create('Combine LDAP and URL authenticators')
+  .get('http://auth_multi.local:1337/')
+  .auth('hatter', 'teaparty')
+  .expectStatus(200)
+  .toss();

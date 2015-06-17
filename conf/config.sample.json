@@ -98,5 +98,16 @@
       "control": "true",
       "action": "authenticateIfPresent(context,function(){proxyWork(context)})"
     }]
+  },{
+    "hostProxy": "auth_multi.local",
+    "port": 5984,
+    "authentication": [
+      {"url": "ldap://ldap.forumsys.com", "id": "uid", "dn": "dc=example,dc=com"},
+      {"url": "http://localhost:5984/"}
+    ],
+    "rules":[{
+      "control": "true",
+      "action": "authenticate(context,function(){authorize(context,function(){proxyWork(context)})})"
+    }]
   }]
 }
