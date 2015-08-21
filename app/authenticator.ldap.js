@@ -11,8 +11,8 @@ module.exports = function() {
       }
       this[url][id] = {
         success: !err,
-        timeOut: setTimeout(this.remove, err? 300000:900000, url, id)
       };
+      setTimeout(this.remove.bind(this), err? 300000:900000, url, id);
     },
     get: function(url, id) {
       console.log('CACHE got');
