@@ -94,8 +94,18 @@ function authenticate(context, callback, shouldNotCatch) {
 }
 
 function sendResponse(context, statusCode, message) {
-  log(context, 'HTTP', statusCode);
-  context.responseOut.status(statusCode).send(message);
+  try {
+    if (!context.responseOut.headersSent) {
+      log(context, 'HTTP', statusCode);
+      context.responseOut.status(statusCode).send(message);
+    } else {
+      console.log("trying to send status "+statusCode+" ("+message+") but headers already sent");
+    }
+  } catch (e) {
+    console.log("exception sending status "+statusCode+" ("+message+") : "+e);
+  } finally {
+    context.responseOut.end();
+  }
 }
 
 /**
@@ -168,31 +178,67 @@ function proxyWork(context) {
 
   var site = configuration.sites[context.conf];
 
-  var requestOut = http.request(context.options, function(responseIn) {
-    if (responseIn.headers.location && site.hideLocationParts) {
-      var locationParts = responseIn.headers.location.split('/');
-      locationParts.splice(3, site.hideLocationParts);
-      responseIn.headers.location = locationParts.join('/');
+  function socketAbort(err) {
+    console.log('error socket responseIn: ' + err.message);
+    try {
+      sendResponse(context,502,"Server closed socket");
+      context.requestIn.socket.end();
+    } catch (e) {
+      console.log("caught this "+e+" which could happen if socket has been reused");
     }
+  }
 
-    addHeaders(context.responseOut,responseIn.headers);
+  var requestOut = http.request(context.options, function(responseIn) {
+    try {
+      if (responseIn.headers.location && site.hideLocationParts) {
+        var locationParts = responseIn.headers.location.split('/');
+        locationParts.splice(3, site.hideLocationParts);
+        responseIn.headers.location = locationParts.join('/');
+      }
 
-    context.responseOut.writeHead(
-      responseIn.statusCode
-    );
-    log(context, 'HTTP', responseIn.statusCode);
-    responseIn.on('data', function(chunkOrigin) {
-      context.responseOut.write(chunkOrigin);
-    });
-    responseIn.on('end', function() {
-      context.responseOut.end();
-      responseIn.socket.end();
-    });
+      addHeaders(context.responseOut,responseIn.headers);
+
+      try {
+        log(context, 'HTTP', responseIn.statusCode);
+      } catch (e) {
+        console.log("cannot log "+responseIn.statusCode);
+        console.log(e.stack);
+      }
+      context.responseOut.writeHead(
+        responseIn.statusCode
+      );
+      responseIn.on('data', function(chunkOrigin) {
+        context.responseOut.write(chunkOrigin);
+      });
+      responseIn.on('end', function() {
+        context.responseOut.end();
+        responseIn.socket.end();
+        context.requestIn.socket.end();
+      });
+
+      responseIn.on('close', function() {
+        console.log("close responseIn");
+        context.responseOut.end();
+      });
+
+      responseIn.on("error",function(err) {
+        console.log('problem with responseIn: ' + err.message);
+        sendResponse(context,502,"Server closed socket");
+      });
+
+      responseIn.socket.on("error",socketAbort);
+    } catch (e) {
+      console.log("exception in proxyWork, aborting");
+      console.log(e.stack);
+      sendResponse(context,500,"Internal server error");
+      requestOut.abort();
+      context.requestIn.socket.end();
+    }
   });
 
   requestOut.on('error', function(err){
-    console.log('problem with the server: ' + JSON.stringify(err));
-    sendResponse(context, 504, "Gateway Timeout");
+    console.log('problem with requestOut: ' + JSON.stringify(err));
+    sendResponse(context,502,"Server closed socket");
   });
 
   if (context.requestIn.readable) {
@@ -202,8 +248,10 @@ function proxyWork(context) {
   });
 
   context.requestIn.on('error', function(err) {
-    log(context, err, 0);
+    console.log("error requestIn");
     console.log('problem with request: ' + err.message);
+    sendResponse(context,400,err);
+    requestOut.abort();
   });
 
   context.requestIn.on('end', function(){
@@ -218,6 +266,7 @@ function proxyWork(context) {
     requestOut.abort();
     requestOut.socket.end();
   });
+
 }
 
 // Function that allow to find the index of the requested server inside config.json
@@ -272,8 +321,7 @@ app.use(function(requestIn, responseOut, next) {
     sendResponse(context, 500, "Server Exception");
   });
   domain.on("error",function(err) {
-    console.log("BIG ERROR");
-    console.log(err);
+    console.log("domain error "+err);
     console.log(err.stack);
     sendResponse(context, 500, "Server Error");
   });
