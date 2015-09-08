@@ -20,6 +20,7 @@ install:
 - npm install -g jasmine-node
 - npm install frisby
 - cp conf/config.sample.json conf/config.json
+- mkdir log
 - node app/proxy.js >/dev/null &
 # Install CouchApp
 - sudo pip install couchapp
