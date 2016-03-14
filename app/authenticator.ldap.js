@@ -62,12 +62,12 @@ module.exports = function() {
             context.login = login;
             ldap.unbind(function () {
               callback(isAuthentified);
-              ldap.socket.end();
+              if (ldap.socket) ldap.socket.end();
             });
           } else {
             console.log('LDAP error: ' + JSON.stringify(err));
             callback(isAuthentified);
-            ldap.socket.end();
+            if (ldap.socket) ldap.socket.end();
           }
         });
       } else {
