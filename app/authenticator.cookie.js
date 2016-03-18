@@ -80,7 +80,7 @@ function handleSessionRequest(sessionHandler) {
     default:
       if (sessionHandler.forward) {
         $.authenticateIfPresent($.context,function() {
-          proxyWork($.context);
+          $.proxyWork($.context);
         });
       } else {
         $.sendResponse($.context, 405, 'Method not allowed');
