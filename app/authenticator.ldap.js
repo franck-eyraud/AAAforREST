@@ -63,6 +63,7 @@ module.exports = function() {
             ldap.unbind(function () {
               callback(isAuthentified);
               if (ldap.socket) ldap.socket.end();
+              else if (ldap._socket) ldap._socket.end();
             });
           } else {
             console.log('LDAP error: ' + JSON.stringify(err));
