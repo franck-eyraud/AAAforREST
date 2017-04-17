@@ -1,6 +1,8 @@
 AAAforREST
 ==========
 
+[![Join the chat at https://gitter.im/franck-eyraud/AAAforREST](https://badges.gitter.im/franck-eyraud/AAAforREST.svg)](https://gitter.im/franck-eyraud/AAAforREST?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 An HTTP reverse proxy to bring authentication, authorization and accounting to RESTful applications (see "[features](https://github.com/Hypertopic/AAAforREST/issues?q=)").
 
 License: [BSD revised](http://opensource.org/licenses/BSD-3-Clause)
